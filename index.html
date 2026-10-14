@@ -122,18 +122,11 @@
         <!-- Dashboard & Chart Section -->
         <div class="w-full">
             <div class="glass-card rounded-2xl p-4 sm:p-6 flex flex-col justify-between">
-                <div class="flex justify-between items-center mb-3 sm:mb-4">
-                    <h2 class="text-sm sm:text-lg font-bold text-slate-800 flex items-center space-x-2">
+                <div class="flex justify-center items-center mb-3 sm:mb-4">
+                    <h2 class="text-sm sm:text-lg font-bold text-slate-800 flex items-center space-x-2 text-center">
                         <i class="fa-solid fa-chart-pie text-bsi"></i>
                         <span>Portofolio Kepemilikan Emas Nasabah</span>
                     </h2>
-                    <div class="flex items-center space-x-3">
-                        <button onclick="bukaModalRiwayatHarga()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-semibold transition border border-slate-300 flex items-center space-x-1.5">
-                            <i class="fa-solid fa-clock-rotate-left text-bsi"></i>
-                            <span>Riwayat Harga</span>
-                        </button>
-                        <span class="text-[11px] sm:text-xs text-bsi italic font-semibold hidden sm:inline">Persentase</span>
-                    </div>
                 </div>
                 <div class="h-64 sm:h-80 relative flex items-center justify-center">
                     <canvas id="chartNasabah"></canvas>
@@ -245,6 +238,9 @@
                     <tbody id="tabelRekapBody" class="divide-y divide-slate-100 bg-white">
                         <tr><td colspan="5" class="text-center py-6 text-slate-400">Memuat rekapitulasi...</td></tr>
                     </tbody>
+                    <tfoot id="tabelRekapFoot" class="bg-slate-50 border-t-2 border-slate-200 font-bold text-slate-800 italic">
+                        <!-- Baris Total dinamis -->
+                    </tfoot>
                 </table>
             </div>
             <div class="flex justify-end mt-4">
@@ -359,7 +355,7 @@
 
     <!-- SCRIPT CLIENT FETCH API (VERCEL COMPATIBLE) -->
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbw8avncppv5nrNO5v3rWVGGNS-T3OUUyWAZMwOKjBbh-EqGqDapnOy4Jm-cchR17mOq/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwHP1S0FqPSkgZFz92-r-h-0QLkQL0AaZWqg2K9xXVLqc6XAlyimlD4MpGmlgYQIUUH/exec";
 
         let halamanAktif = 1;
         let limitData = 10;
@@ -438,10 +434,9 @@
                             '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Setor</span>' : 
                             '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Ambil</span>';
                         
-                        // Menjaga agar string gram apa adanya tampil sempurna dengan 0 di depan
-                        let rawGram = String(row[5]).trim().replace(" gr", "").replace("Rp ", "");
-                        if (rawGram.startsWith(".")) rawGram = "0" + rawGram;
-                        if (rawGram.startsWith(",")) rawGram = "0" + rawGram;
+                        let cleanGramStr = String(row[5]).trim().replace(" gr", "").replace("Rp ", "");
+                        if (cleanGramStr.startsWith(".")) cleanGramStr = "0" + cleanGramStr;
+                        if (cleanGramStr.startsWith(",")) cleanGramStr = "0" + cleanGramStr;
 
                         html += '<tr class="hover:bg-slate-50 transition">' +
                             '<td class="px-3 sm:px-4 py-3 font-mono text-[11px] sm:text-xs text-bsi font-semibold">' + row[0] + '</td>' +
@@ -449,7 +444,7 @@
                             '<td class="px-3 sm:px-4 py-3 font-semibold text-slate-800 text-xs sm:text-sm">' + row[2] + '</td>' +
                             '<td class="px-3 sm:px-4 py-3">' + jenisBadge + '</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-slate-800 text-xs sm:text-sm">Rp ' + Number(row[4]).toLocaleString('id-ID') + '</td>' +
-                            '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-emerald-600 text-xs sm:text-sm">' + rawGram + ' gr</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-emerald-600 text-xs sm:text-sm">' + cleanGramStr + ' gr</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-slate-500 text-[11px] sm:text-xs">' + (row[7] || '-') + '</td>' +
                             '</tr>';
                     });
@@ -565,13 +560,25 @@
                 .then(res => res.json())
                 .then(res => {
                     const tbody = document.getElementById('tabelRekapBody');
+                    const tfoot = document.getElementById('tabelRekapFoot');
                     tbody.innerHTML = '';
+                    tfoot.innerHTML = '';
+
                     if (!res.data || res.data.length === 0) {
                         tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">Belum ada data nasabah.</td></tr>';
                         return;
                     }
+
                     let html = '';
+                    let totalSaldoGr = 0;
+                    let totalTabunganRp = 0;
+                    let totalValuasiRp = 0;
+
                     res.data.forEach(function(row) {
+                        totalSaldoGr += Number(row.saldoGram) || 0;
+                        totalTabunganRp += Number(row.totalTabunganRupiah) || 0;
+                        totalValuasiRp += Number(row.valuasiAset) || 0;
+
                         html += '<tr class="hover:bg-slate-50 transition">' +
                             '<td class="px-3 sm:px-4 py-3 font-semibold text-slate-800 text-xs sm:text-sm">' + row.nama + '</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-center text-slate-600 text-xs">' + row.jumlahTransaksi + 'x</td>' +
@@ -581,6 +588,15 @@
                             '</tr>';
                     });
                     tbody.innerHTML = html;
+
+                    // Render baris total di bagian bawah tabel rekap dengan font italic
+                    tfoot.innerHTML = '<tr class="italic text-xs sm:text-sm bg-slate-100">' +
+                        '<td class="px-3 sm:px-4 py-3 font-bold text-slate-900">TOTAL</td>' +
+                        '<td class="px-3 sm:px-4 py-3 text-center">-</td>' +
+                        '<td class="px-3 sm:px-4 py-3 text-right font-bold text-emerald-700">' + totalSaldoGr.toFixed(4) + ' gr</td>' +
+                        '<td class="px-3 sm:px-4 py-3 text-right font-bold text-slate-900">Rp ' + totalTabunganRp.toLocaleString('id-ID') + '</td>' +
+                        '<td class="px-3 sm:px-4 py-3 text-right font-bold text-amber-800">Rp ' + totalValuasiRp.toLocaleString('id-ID') + '</td>' +
+                        '</tr>';
                 })
                 .catch(err => tampilkanToast('Gagal memuat rekap: ' + err.message, 'error'));
         }
@@ -626,7 +642,6 @@
             const tanggalInput = document.getElementById('formTanggal').value;
             const rupiah = parseFloat(document.getElementById('formRupiah').value);
             
-            // Ambil string input gram apa adanya agar 0 di depan koma aman
             const gramInputEl = document.getElementById('formGram');
             const gramCustomStr = gramInputEl.value.trim();
             const gramCustom = parseFloat(gramCustomStr);
