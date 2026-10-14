@@ -112,7 +112,10 @@
                 <div class="absolute right-4 top-4 text-bsi/10 text-3xl sm:text-4xl"><i class="fa-solid fa-vault"></i></div>
                 <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Valuasi Total Aset</p>
                 <h3 id="statTotalValuasi" class="text-xl sm:text-2xl font-extrabold text-slate-800 mt-1 sm:mt-2">Rp 0</h3>
-                <span id="labelHargaAktif" class="text-[11px] sm:text-xs text-amber-700 font-medium mt-1 inline-block"><i class="fa-solid fa-tag mr-1"></i> Harga: Rp 0/gr</span>
+                <div class="mt-1 flex flex-col">
+                    <span id="labelHargaAktif" class="text-[11px] sm:text-xs text-amber-700 font-medium"><i class="fa-solid fa-tag mr-1"></i> Harga: Rp 0/gr</span>
+                    <span id="labelTanggalHarga" class="text-[10px] text-slate-400 italic mt-0.5">update tanggal -</span>
+                </div>
             </div>
         </div>
 
@@ -137,10 +140,6 @@
                         <span>Informasi Tabungan Emas</span>
                     </h2>
                     <div class="space-y-2.5 bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200">
-                        <div class="flex justify-between text-xs">
-                            <span class="text-slate-500">Update Harga Terakhir:</span>
-                            <span id="infoUpdateHarga" class="font-semibold text-slate-800">-</span>
-                        </div>
                         <div class="flex justify-between text-xs">
                             <span class="text-slate-500">Metode Konversi:</span>
                             <span class="font-semibold text-bsi">Presisi Fleksibel</span>
@@ -251,11 +250,12 @@
                             <th class="px-3 sm:px-4 py-3">Nama Nasabah</th>
                             <th class="px-3 sm:px-4 py-3 text-center">Transaksi</th>
                             <th class="px-3 sm:px-4 py-3 text-right">Saldo (gr)</th>
-                            <th class="px-3 sm:px-4 py-3 text-right">Valuasi (Rp)</th>
+                            <th class="px-3 sm:px-4 py-3 text-right">Total Tabungan (Rp)</th>
+                            <th class="px-3 sm:px-4 py-3 text-right">Valuasi Sekarang (Rp)</th>
                         </tr>
                     </thead>
                     <tbody id="tabelRekapBody" class="divide-y divide-slate-100 bg-white">
-                        <tr><td colspan="4" class="text-center py-6 text-slate-400">Memuat rekapitulasi...</td></tr>
+                        <tr><td colspan="5" class="text-center py-6 text-slate-400">Memuat rekapitulasi...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -371,7 +371,7 @@
 
     <!-- SCRIPT CLIENT FETCH API (VERCEL COMPATIBLE) -->
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbx14EhSCffJxExVpCMmKEJPrXT8Tcm1QrFB2laCKRiMzFfmvpth_9z521eRXp7exgN_/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycby9s2A7bIwgMyM4QB3FMY7GP0CFDOJRocXmOGCozMRRdOOJX4OADJSljIJvLx6DPfad/exec";
 
         let halamanAktif = 1;
         let limitData = 10;
@@ -417,7 +417,16 @@
                         document.getElementById('statTotalGram').innerText = Number(res.totalGramKeseluruhan).toFixed(4) + ' gr';
                         document.getElementById('statTotalValuasi').innerText = 'Rp ' + Number(res.totalValuasi).toLocaleString('id-ID');
                         document.getElementById('labelHargaAktif').innerHTML = '<i class="fa-solid fa-tag mr-1"></i> Harga: Rp ' + Number(res.hargaAktif).toLocaleString('id-ID') + '/gr';
-                        document.getElementById('infoUpdateHarga').innerText = res.tanggalUpdate;
+                        
+                        // Format tanggal update dari backend ke format dd-mm-yyyy jika ada
+                        let tglUpdateStr = res.tanggalUpdate || "-";
+                        if (tglUpdateStr !== "-") {
+                            // Jika format tersimpan dd-mm-yyyy atau yyyy-mm-dd
+                            document.getElementById('labelTanggalHarga').innerText = 'update tanggal ' + tglUpdateStr;
+                        } else {
+                            document.getElementById('labelTanggalHarga').innerText = 'update tanggal -';
+                        }
+
                         renderPieChart(res.ringkasanNasabah);
                     }
                 })
@@ -532,7 +541,7 @@
                     const tbody = document.getElementById('tabelRekapBody');
                     tbody.innerHTML = '';
                     if (!res.data || res.data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-400">Belum ada data nasabah.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">Belum ada data nasabah.</td></tr>';
                         return;
                     }
                     let html = '';
@@ -541,6 +550,7 @@
                             '<td class="px-3 sm:px-4 py-3 font-semibold text-slate-800 text-xs sm:text-sm">' + row.nama + '</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-center text-slate-600 text-xs">' + row.jumlahTransaksi + 'x</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-emerald-600 text-xs sm:text-sm">' + row.saldoGram + ' gr</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-right font-medium text-slate-700 text-xs sm:text-sm">Rp ' + Number(row.totalTabunganRupiah).toLocaleString('id-ID') + '</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-amber-700 text-xs sm:text-sm">Rp ' + Number(row.valuasiAset).toLocaleString('id-ID') + '</td>' +
                             '</tr>';
                     });
