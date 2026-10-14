@@ -359,7 +359,7 @@
 
     <!-- SCRIPT CLIENT FETCH API (VERCEL COMPATIBLE) -->
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxppUGHjUYWPYdmmEcnfoFUYg5-f43IuvExAoTv2u9X1fniv3SWNP9xvfKQK44qZtz_/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyJ-UixCxwlTO9wZhmq0rxzMIeQJW6mm_KXCu5ODv7b2E0MgXDT5-9GORDT_5N1SjQc/exec";
 
         let halamanAktif = 1;
         let limitData = 10;
@@ -438,7 +438,7 @@
                             '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Setor</span>' : 
                             '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Ambil</span>';
                         
-                        // Pertahankan string asli gram apa adanya (menjaga angka 0 di depan koma)
+                        // Menjaga agar string gram apa adanya tampil sempurna dengan 0 di depan
                         let rawGram = String(row[5]).trim().replace(" gr", "").replace("Rp ", "");
                         if (rawGram.startsWith(".")) rawGram = "0" + rawGram;
                         if (rawGram.startsWith(",")) rawGram = "0" + rawGram;
@@ -626,7 +626,7 @@
             const tanggalInput = document.getElementById('formTanggal').value;
             const rupiah = parseFloat(document.getElementById('formRupiah').value);
             
-            // Ambil langsung nilai string dari input gram agar angka 0 di depan koma (misal 0.039) aman
+            // Ambil string input gram apa adanya agar 0 di depan koma aman
             const gramInputEl = document.getElementById('formGram');
             const gramCustomStr = gramInputEl.value.trim();
             const gramCustom = parseFloat(gramCustomStr);
@@ -646,7 +646,6 @@
                 }
             }
 
-            // Kirim gramCustomStr (string) agar backend tidak memotong leading zero
             const payload = { nama: nama, jenis: jenis, tanggal: formattedDate, rupiah: rupiah, gram: gramCustomStr, keterangan: keterangan };
 
             fetch(API_URL, {
