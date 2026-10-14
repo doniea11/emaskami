@@ -359,7 +359,7 @@
 
     <!-- SCRIPT CLIENT FETCH API (VERCEL COMPATIBLE) -->
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbzoiYLy9AXgU54U2YtHUoWKbd0pIcS5jqSu98h0t5BR3WyKhk9R_SpU4nAHfCoTzqRs/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycby6GjXwLqW37ywG55G4LLLxEf5q4Z3lth8E4sADemjx0A-Zm0paEkuJbWW999kia2vw/exec";
 
         let halamanAktif = 1;
         let limitData = 10;
@@ -470,37 +470,38 @@
             muatTabelTransaksi();
         }
 
-        const centerPercentagePlugin = {
-            id: 'centerPercentagePlugin',
-            afterDraw(chart) {
-                const { ctx, width, height } = chart;
-                ctx.save();
-                const activeMeta = chart.getDatasetMeta(0);
-                if (!activeMeta || !activeMeta.data || activeMeta.data.length === 0) return;
-                
-                const xCenter = activeMeta.data[0].x;
-                const yCenter = activeMeta.data[0].y;
-                
-                const activeElements = chart.getActiveElements();
-                if (activeElements.length > 0) {
-                    const dataIndex = activeElements[0].index;
-                    const dataset = chart.data.datasets[0];
-                    const total = dataset.data.reduce((acc, val) => acc + val, 0);
-                    const currentValue = dataset.data[dataIndex];
-                    const percentage = total > 0 ? ((currentValue / total) * 100).toFixed(1) + '%' : '0%';
-                    const labelName = chart.data.labels[dataIndex];
-
-                    ctx.font = 'bold 13px Inter, sans-serif';
-                    ctx.fillStyle = '#1e293b';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(percentage, xCenter, yCenter - 6);
-
-                    ctx.font = '10px Inter, sans-serif';
-                    ctx.fillStyle = '#64748b';
-                    ctx.fillText(labelName, xCenter, yCenter + 10);
-                }
-                ctx.restore();
+        // Plugin kustom Chart.js untuk merender angka persentase langsung di dalam / tengah masing-masing warna potongan grafik donat
+        const directPercentagePlugin = {
+            id: 'directPercentagePlugin',
+            afterDatasetsDraw(chart) {
+                const { ctx } = chart;
+                chart.data.datasets.forEach((dataset, datasetIndex) => {
+                    const meta = chart.getDatasetMeta(datasetIndex);
+                    if (!meta.hidden) {
+                        meta.data.forEach((element, index) => {
+                            const dataVal = dataset.data[index];
+                            const total = dataset.data.reduce((a, b) => a + b, 0);
+                            if (total === 0 || dataVal === 0) return;
+                            
+                            const percentage = ((dataVal / total) * 100).toFixed(1) + '%';
+                            
+                            // Hitung titik tengah (centroid) dari arc chart
+                            const position = element.tooltipPosition();
+                            
+                            ctx.save();
+                            ctx.font = 'bold 11px Inter, sans-serif';
+                            ctx.fillStyle = '#ffffff';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            
+                            // Berikan sedikit efek bayangan teks agar kontras di atas warna apapun
+                            ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+                            ctx.shadowBlur = 4;
+                            ctx.fillText(percentage, position.x, position.y);
+                            ctx.restore();
+                        });
+                    }
+                });
             }
         };
 
@@ -556,7 +557,7 @@
                         }
                     }
                 },
-                plugins: [centerPercentagePlugin]
+                plugins: [directPercentagePlugin]
             });
         }
 
