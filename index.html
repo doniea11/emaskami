@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Catatan Tabungan Emas</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bsi: {
+                            light: '#e6f7f8',
+                            DEFAULT: '#00a3ad',
+                            dark: '#00818a',
+                            accent: '#00a3ad',
+                            gold: '#d4af37',
+                            bg: '#f8fafc',
+                            card: '#ffffff'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .bsi-gradient {
+            background: linear-gradient(135deg, #00a3ad 0%, #00818a 100%);
+        }
+        * {
+            touch-action: manipulation;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- Header Navbar -->
+    <header class="glass-card sticky top-0 z-40 border-b border-slate-200 shadow-xs">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white flex items-center justify-center shadow-xs border border-teal-600/20 overflow-hidden p-1">
+                    <img src="https://lh3.googleusercontent.com/d/1HlbBJv6d9o2UNdsxe4k3jIZ17DJ8la5g=s220" alt="Logo Emas" class="w-full h-full object-contain">
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-lg font-bold tracking-wide text-slate-800 leading-tight">Catatan Tabungan Emas</h1>
+                    <p class="text-[10px] sm:text-xs text-bsi font-semibold">Sistem Transaksi & Valuasi Emas</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-1.5 sm:space-x-2">
+                <button onclick="bukaModalRekap()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-2.5 sm:px-4 py-2 rounded-xl font-medium text-xs sm:text-sm flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-address-book text-bsi"></i>
+                    <span class="hidden md:inline">Rekap</span>
+                </button>
+                <button onclick="bukaModalPin()" class="bsi-gradient hover:opacity-90 text-white px-2.5 sm:px-4 py-2 rounded-xl font-medium text-xs sm:text-sm flex items-center space-x-1.5 transition shadow-xs">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>Transaksi</span>
+                </button>
+                <button onclick="bukaModalHarga()" class="bg-white hover:bg-slate-50 text-bsi border border-bsi/30 p-2 sm:px-4 sm:py-2 rounded-xl font-medium text-xs sm:text-sm flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-coins"></i>
+                    <span class="hidden md:inline">Update Harga</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 w-full space-y-4 sm:space-y-8">
+        
+        <!-- Top Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+            <div class="glass-card rounded-2xl p-4 sm:p-6 relative overflow-hidden">
+                <div class="absolute right-4 top-4 text-bsi/10 text-3xl sm:text-4xl"><i class="fa-solid fa-users"></i></div>
+                <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Total Nasabah Aktif</p>
+                <h3 id="statTotalNasabah" class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-1 sm:mt-2">0</h3>
+                <span class="text-[11px] sm:text-xs text-bsi font-medium mt-1 inline-block"><i class="fa-solid fa-circle-check mr-1"></i> Terdaftar di sistem</span>
+            </div>
+            <div class="glass-card rounded-2xl p-4 sm:p-6 relative overflow-hidden">
+                <div class="absolute right-4 top-4 text-bsi/10 text-3xl sm:text-4xl"><i class="fa-solid fa-weight-scale"></i></div>
+                <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Total Akumulasi Gram</p>
+                <h3 id="statTotalGram" class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-1 sm:mt-2">0.0000 gr</h3>
+                <span class="text-[11px] sm:text-xs text-emerald-600 font-medium mt-1 inline-block"><i class="fa-solid fa-arrow-trend-up mr-1"></i> Akumulasi murni</span>
+            </div>
+            <div class="glass-card rounded-2xl p-4 sm:p-6 relative overflow-hidden">
+                <div class="absolute right-4 top-4 text-bsi/10 text-3xl sm:text-4xl"><i class="fa-solid fa-vault"></i></div>
+                <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Valuasi Total Aset</p>
+                <h3 id="statTotalValuasi" class="text-xl sm:text-2xl font-extrabold text-slate-800 mt-1 sm:mt-2">Rp 0</h3>
+                <span id="labelHargaAktif" class="text-[11px] sm:text-xs text-amber-700 font-medium mt-1 inline-block"><i class="fa-solid fa-tag mr-1"></i> Harga: Rp 0/gr</span>
+            </div>
+        </div>
+
+        <!-- Dashboard & Chart Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div class="glass-card rounded-2xl p-4 sm:p-6 lg:col-span-2 flex flex-col justify-between">
+                <div class="flex justify-between items-center mb-3 sm:mb-4">
+                    <h2 class="text-sm sm:text-lg font-bold text-slate-800 flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-pie text-bsi"></i>
+                        <span>Portofolio Kepemilikan Emas Nasabah</span>
+                    </h2>
+                    <span class="text-[11px] sm:text-xs text-slate-500 font-medium">Distribusi Gram</span>
+                </div>
+                <div class="h-56 sm:h-64 relative flex items-center justify-center">
+                    <canvas id="chartNasabah"></canvas>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl p-4 sm:p-6 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-sm sm:text-lg font-bold text-slate-800 flex items-center space-x-2 mb-4">
+                        <i class="fa-solid fa-shield-halal text-bsi"></i>
+                        <span>Informasi Tabungan Emas</span>
+                    </h2>
+                    <div class="space-y-2.5 bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-500">Update Harga Terakhir:</span>
+                            <span id="infoUpdateHarga" class="font-semibold text-slate-800">-</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-500">Metode Konversi:</span>
+                            <span class="font-semibold text-bsi">Presisi 4 Desimal</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="bukaModalRiwayatHarga()" class="w-full mt-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs py-2.5 rounded-xl font-semibold transition border border-slate-300 flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-clock-rotate-left text-bsi"></i>
+                    <span>Lihat Riwayat Harga Emas</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Table & Filter Section -->
+        <div class="glass-card rounded-2xl p-4 sm:p-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-3">
+                <h2 class="text-sm sm:text-lg font-bold text-slate-800 flex items-center space-x-2 self-start sm:self-center">
+                    <i class="fa-solid fa-list-check text-bsi"></i>
+                    <span>Riwayat Transaksi Menabung</span>
+                </h2>
+                <div class="flex flex-row items-center gap-2 w-full sm:w-auto">
+                    <div class="relative w-full sm:w-60">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa-solid fa-search text-xs"></i></span>
+                        <input type="text" id="inputCari" oninput="handleCari()" placeholder="Cari nama atau ID..." class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                    </div>
+                    <select id="filterJenis" onchange="handleCari()" class="bg-slate-50 border border-slate-300 rounded-xl px-2.5 sm:px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                        <option value="">Semua</option>
+                        <option value="Setor Uang">Setor</option>
+                        <option value="Ambil Uang">Ambil</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-200">
+                <table class="w-full text-left text-xs sm:text-sm text-slate-600 whitespace-nowrap sm:whitespace-normal">
+                    <thead class="bg-bsi-light text-[10px] sm:text-xs uppercase text-bsi font-bold tracking-wider border-b border-slate-200">
+                        <tr>
+                            <th class="px-3 sm:px-4 py-3">ID Transaksi</th>
+                            <th class="px-3 sm:px-4 py-3">Tanggal</th>
+                            <th class="px-3 sm:px-4 py-3">Nama Nasabah</th>
+                            <th class="px-3 sm:px-4 py-3">Jenis</th>
+                            <th class="px-3 sm:px-4 py-3 text-right">Jumlah Rupiah</th>
+                            <th class="px-3 sm:px-4 py-3 text-right">Jumlah Gram</th>
+                            <th class="px-3 sm:px-4 py-3 text-right">Harga / Gram</th>
+                            <th class="px-3 sm:px-4 py-3">Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelTransaksiBody" class="divide-y divide-slate-100 bg-white">
+                        <tr>
+                            <td colspan="8" class="text-center py-6 text-slate-400">Memuat data transaksi...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-between items-center mt-4 text-xs text-slate-500 gap-2">
+                <span id="infoPagination">Menampilkan data</span>
+                <div class="flex space-x-2">
+                    <button onclick="ubahHalaman(-1)" id="btnPrev" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg disabled:opacity-50 transition border border-slate-200">Sebelumnya</button>
+                    <button onclick="ubahHalaman(1)" id="btnNext" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg disabled:opacity-50 transition border border-slate-200">Berikutnya</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-card mt-auto border-t border-slate-200 py-3 text-center text-[11px] sm:text-xs text-slate-500">
+        <p>&copy; 2026 Catatan Tabungan Emas &bull; Powered by masdonie Architecture</p>
+    </footer>
+
+    <!-- MODAL PIN -->
+    <div id="modalPin" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
+        <div class="glass-card rounded-2xl max-w-sm w-full p-5 sm:p-6 border border-slate-200 shadow-2xl relative bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base sm:text-lg font-bold text-slate-800 flex items-center space-x-2">
+                    <i class="fa-solid fa-lock text-bsi"></i>
+                    <span>Verifikasi Keamanan</span>
+                </h3>
+                <button onclick="tutupModalPin()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="prosesVerifikasiPin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Masukkan Password</label>
+                    <input type="password" id="inputPinTransaksi" required maxlength="20" placeholder="" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-800 text-center tracking-widest font-bold focus:outline-none focus:border-bsi">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="tutupModalPin()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-200 transition">Batal</button>
+                    <button type="submit" class="px-4 sm:px-5 py-2 bsi-gradient text-white font-medium rounded-xl text-xs sm:text-sm shadow-md shadow-bsi/30 hover:opacity-90 transition">Konfirmasi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL REKAP -->
+    <div id="modalRekap" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
+        <div class="glass-card rounded-2xl max-w-4xl w-full p-5 sm:p-6 border border-slate-200 shadow-2xl relative max-h-[85vh] flex flex-col bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-sm sm:text-lg font-bold text-slate-800 flex items-center space-x-2">
+                    <i class="fa-solid fa-address-book text-bsi"></i>
+                    <span>Rekapitulasi Kepemilikan Emas per Nasabah</span>
+                </h3>
+                <button onclick="tutupModalRekap()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="overflow-y-auto flex-grow rounded-xl border border-slate-200">
+                <table class="w-full text-left text-xs sm:text-sm text-slate-600">
+                    <thead class="bg-bsi-light text-[10px] sm:text-xs uppercase text-bsi font-bold tracking-wider sticky top-0 border-b border-slate-200">
+                        <tr>
+                            <th class="px-3 sm:px-4 py-3">Nama Nasabah</th>
+                            <th class="px-3 sm:px-4 py-3 text-center">Transaksi</th>
+                            <th class="px-3 sm:px-4 py-3 text-right">Saldo (gr)</th>
+                            <th class="px-3 sm:px-4 py-3 text-right">Valuasi (Rp)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelRekapBody" class="divide-y divide-slate-100 bg-white">
+                        <tr><td colspan="4" class="text-center py-6 text-slate-400">Memuat rekapitulasi...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-end mt-4">
+                <button onclick="tutupModalRekap()" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-200 transition">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TRANSAKSI -->
+    <div id="modalTransaksi" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
+        <div class="glass-card rounded-2xl max-w-md w-full p-5 sm:p-6 border border-slate-200 shadow-2xl relative bg-white max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base sm:text-lg font-bold text-slate-800 flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-plus text-bsi"></i>
+                    <span>Input Transaksi Menabung Emas</span>
+                </h3>
+                <button onclick="tutupModalTransaksi()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="simpanTransaksi(event)" class="space-y-3 sm:space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Nasabah</label>
+                    <input type="text" id="formNama" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Jenis Transaksi</label>
+                        <select id="formJenis" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                            <option value="Setor Uang">Setor Uang</option>
+                            <option value="Ambil Uang">Ambil Uang</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Transaksi</label>
+                        <input type="datetime-local" id="formTanggal" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nominal Rupiah (Rp)</label>
+                    <input type="number" id="formRupiah" required min="1000" oninput="hitungGramOtomatis()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Gram (gr)</label>
+                    <input type="number" id="formGram" step="0.0001" required min="0.0001" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Keterangan / Catatan</label>
+                    <textarea id="formKeterangan" rows="2" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="tutupModalTransaksi()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-200 transition">Batal</button>
+                    <button type="submit" id="btnSimpanTransaksi" class="px-4 sm:px-5 py-2 bsi-gradient text-white font-medium rounded-xl text-xs sm:text-sm shadow-md shadow-bsi/30 hover:opacity-90 transition">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL HARGA -->
+    <div id="modalHarga" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
+        <div class="glass-card rounded-2xl max-w-sm w-full p-5 sm:p-6 border border-slate-200 shadow-2xl relative bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base sm:text-lg font-bold text-slate-800 flex items-center space-x-2">
+                    <i class="fa-solid fa-coins text-amber-600"></i>
+                    <span>Update Harga Emas</span>
+                </h3>
+                <button onclick="tutupModalHarga()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="simpanHargaBaru(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Pembaruan</label>
+                    <input type="datetime-local" id="formHargaTanggal" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Harga Jual per Gram (Rp)</label>
+                    <input type="number" id="formHargaBaru" required min="10000" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="tutupModalHarga()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-200 transition">Batal</button>
+                    <button type="submit" class="px-4 sm:px-5 py-2 bsi-gradient text-white font-medium rounded-xl text-xs sm:text-sm shadow-md shadow-bsi/30 hover:opacity-90 transition">Perbarui</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL RIWAYAT -->
+    <div id="modalRiwayatHarga" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/40 backdrop-blur-xs p-3">
+        <div class="glass-card rounded-2xl max-w-2xl w-full p-5 sm:p-6 border border-slate-200 shadow-2xl relative max-h-[85vh] flex flex-col bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-sm sm:text-lg font-bold text-slate-800 flex items-center space-x-2">
+                    <i class="fa-solid fa-clock-rotate-left text-bsi"></i>
+                    <span>Riwayat Log Perubahan Harga Emas</span>
+                </h3>
+                <button onclick="tutupModalRiwayatHarga()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="overflow-y-auto flex-grow rounded-xl border border-slate-200">
+                <table class="w-full text-left text-xs sm:text-sm text-slate-600">
+                    <thead class="bg-bsi-light text-[10px] sm:text-xs uppercase text-bsi font-bold tracking-wider sticky top-0 border-b border-slate-200">
+                        <tr>
+                            <th class="px-3 sm:px-4 py-3">Tanggal Pembaruan</th>
+                            <th class="px-3 sm:px-4 py-3 text-right">Harga Jual per Gram</th>
+                            <th class="px-3 sm:px-4 py-3">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelRiwayatHargaBody" class="divide-y divide-slate-100 bg-white">
+                        <tr><td colspan="3" class="text-center py-4 text-slate-400">Memuat riwayat...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- SCRIPT CLIENT FETCH API (VERCEL COMPATIBLE) -->
+    <script>
+        // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+        const API_URL = "MASUKKAN_URL_DEPLOY_APPS_SCRIPT_ANDA";
+
+        let halamanAktif = 1;
+        let limitData = 10;
+        let chartInstance = null;
+        let hargaAktifGlobal = 1250000;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            muatDataDashboard();
+            muatTabelTransaksi();
+            setWaktuDefault();
+        });
+
+        function setWaktuDefault() {
+            const now = new Date();
+            const offset = now.getTimezoneOffset();
+            const localDate = new Date(now.getTime() - (offset*60*1000));
+            const isoStr = localDate.toISOString().slice(0,16);
+            document.getElementById('formTanggal').value = isoStr;
+            document.getElementById('formHargaTanggal').value = isoStr;
+        }
+
+        function hitungGramOtomatis() {
+            const rupiah = parseFloat(document.getElementById('formRupiah').value) || 0;
+            if (hargaAktifGlobal > 0) {
+                const gram = rupiah / hargaAktifGlobal;
+                document.getElementById('formGram').value = gram.toFixed(4);
+            }
+        }
+
+        function tampilkanToast(pesan, tipe = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'pointer-events-auto px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm font-medium text-white flex items-center space-x-2 transition transform translate-y-2 opacity-0 duration-300 ' + 
+                (tipe === 'success' ? 'bg-emerald-600 border border-emerald-500/30' : 'bg-red-600 border border-red-500/30');
+            toast.innerHTML = '<i class="fa-solid ' + (tipe === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation') + '"></i><span>' + pesan + '</span>';
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 50);
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => { toast.remove(); }, 300);
+            }, 3500);
+        }
+
+        function muatDataDashboard() {
+            fetch(`${API_URL}?action=getDashboard`)
+                .then(res => res.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        hargaAktifGlobal = res.hargaAktif;
+                        document.getElementById('statTotalNasabah').innerText = res.totalNasabah;
+                        document.getElementById('statTotalGram').innerText = Number(res.totalGramKeseluruhan).toFixed(4) + ' gr';
+                        document.getElementById('statTotalValuasi').innerText = 'Rp ' + Number(res.totalValuasi).toLocaleString('id-ID');
+                        document.getElementById('labelHargaAktif').innerHTML = '<i class="fa-solid fa-tag mr-1"></i> Harga: Rp ' + Number(res.hargaAktif).toLocaleString('id-ID') + '/gr';
+                        document.getElementById('infoUpdateHarga').innerText = res.tanggalUpdate;
+                        renderPieChart(res.ringkasanNasabah);
+                    }
+                })
+                .catch(err => tampilkanToast('Gagal memuat ringkasan: ' + err.message, 'error'));
+        }
+
+        function muatTabelTransaksi() {
+            const cari = document.getElementById('inputCari').value;
+            const jenis = document.getElementById('filterJenis').value;
+
+            fetch(`${API_URL}?action=getTransaksi&halaman=${halamanAktif}&limit=${limitData}&pencarian=${encodeURIComponent(cari)}&filterJenis=${encodeURIComponent(jenis)}`)
+                .then(res => res.json())
+                .then(res => {
+                    const tbody = document.getElementById('tabelTransaksiBody');
+                    tbody.innerHTML = '';
+                    if (!res.data || res.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400">Belum ada data transaksi.</td></tr>';
+                        document.getElementById('infoPagination').innerText = 'Menampilkan 0 data';
+                        document.getElementById('btnPrev').disabled = true;
+                        document.getElementById('btnNext').disabled = true;
+                        return;
+                    }
+
+                    let html = '';
+                    res.data.forEach(function(row) {
+                        const jenisBadge = row[3] === 'Setor Uang' ? 
+                            '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Setor</span>' : 
+                            '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Ambil</span>';
+                        
+                        html += '<tr class="hover:bg-slate-50 transition">' +
+                            '<td class="px-3 sm:px-4 py-3 font-mono text-[11px] sm:text-xs text-bsi font-semibold">' + row[0] + '</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-slate-500 text-xs">' + row[1] + '</td>' +
+                            '<td class="px-3 sm:px-4 py-3 font-semibold text-slate-800 text-xs sm:text-sm">' + row[2] + '</td>' +
+                            '<td class="px-3 sm:px-4 py-3">' + jenisBadge + '</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-slate-800 text-xs sm:text-sm">Rp ' + Number(row[4]).toLocaleString('id-ID') + '</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-emerald-600 text-xs sm:text-sm">' + Number(row[5]).toFixed(4) + ' gr</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-right text-slate-500 text-xs">Rp ' + Number(row[6]).toLocaleString('id-ID') + '</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-slate-500 text-[11px] sm:text-xs">' + (row[7] || '-') + '</td>' +
+                            '</tr>';
+                    });
+                    tbody.innerHTML = html;
+
+                    document.getElementById('infoPagination').innerText = 'Hal ' + res.halaman + ' dari ' + res.totalHalaman + ' (Total ' + res.totalData + ')';
+                    document.getElementById('btnPrev').disabled = res.halaman <= 1;
+                    document.getElementById('btnNext').disabled = res.halaman >= res.totalHalaman;
+                })
+                .catch(err => tampilkanToast('Gagal memuat tabel: ' + err.message, 'error'));
+        }
+
+        function handleCari() {
+            halamanAktif = 1;
+            muatTabelTransaksi();
+        }
+
+        function ubahHalaman(delta) {
+            halamanAktif += delta;
+            muatTabelTransaksi();
+        }
+
+        function renderPieChart(dataNasabah) {
+            const ctx = document.getElementById('chartNasabah').getContext('2d');
+            const labels = Object.keys(dataNasabah);
+            const values = Object.values(dataNasabah).map(item => item.gram);
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            if (labels.length === 0) return;
+
+            const dynamicColors = [
+                '#00a3ad', '#b89728', '#20b2aa', '#3cb371', '#e67e22', 
+                '#9b59b6', '#3498db', '#e74c3c', '#1abc9c', '#f1c40f'
+            ];
+            let backgroundColors = labels.map((_, i) => dynamicColors[i % dynamicColors.length]);
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#334155',
+                                font: { size: 10, family: 'Inter' },
+                                boxWidth: 12
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function bukaModalRekap() {
+            document.getElementById('modalRekap').classList.remove('hidden');
+            fetch(`${API_URL}?action=getRekap`)
+                .then(res => res.json())
+                .then(res => {
+                    const tbody = document.getElementById('tabelRekapBody');
+                    tbody.innerHTML = '';
+                    if (!res.data || res.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-400">Belum ada data nasabah.</td></tr>';
+                        return;
+                    }
+                    let html = '';
+                    res.data.forEach(function(row) {
+                        html += '<tr class="hover:bg-slate-50 transition">' +
+                            '<td class="px-3 sm:px-4 py-3 font-semibold text-slate-800 text-xs sm:text-sm">' + row.nama + '</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-center text-slate-600 text-xs">' + row.jumlahTransaksi + 'x</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-emerald-600 text-xs sm:text-sm">' + row.saldoGram.toFixed(4) + ' gr</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-amber-700 text-xs sm:text-sm">Rp ' + Number(row.valuasiAset).toLocaleString('id-ID') + '</td>' +
+                            '</tr>';
+                    });
+                    tbody.innerHTML = html;
+                })
+                .catch(err => tampilkanToast('Gagal memuat rekap: ' + err.message, 'error'));
+        }
+        function tutupModalRekap() { document.getElementById('modalRekap').classList.add('hidden'); }
+
+        function bukaModalPin() {
+            document.getElementById('inputPinTransaksi').value = '';
+            document.getElementById('modalPin').classList.remove('hidden');
+        }
+        function tutupModalPin() { document.getElementById('modalPin').classList.add('hidden'); }
+
+        function prosesVerifikasiPin(event) {
+            event.preventDefault();
+            const pin = document.getElementById('inputPinTransaksi').value;
+            if (!pin) return;
+
+            fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'verifikasiPin', pin: pin })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    tutupModalPin();
+                    bukaModalTransaksi();
+                } else {
+                    tampilkanToast(res.message, 'error');
+                }
+            })
+            .catch(err => tampilkanToast('Error: ' + err.message, 'error'));
+        }
+
+        function bukaModalTransaksi() {
+            document.getElementById('modalTransaksi').classList.remove('hidden');
+            setWaktuDefault();
+        }
+        function tutupModalTransaksi() { document.getElementById('modalTransaksi').classList.add('hidden'); }
+
+        function simpanTransaksi(event) {
+            event.preventDefault();
+            const nama = document.getElementById('formNama').value.trim();
+            const jenis = document.getElementById('formJenis').value;
+            const tanggalInput = document.getElementById('formTanggal').value;
+            const rupiah = parseFloat(document.getElementById('formRupiah').value);
+            const gramCustom = parseFloat(document.getElementById('formGram').value);
+            const keterangan = document.getElementById('formKeterangan').value.trim();
+
+            if (!nama || isNaN(rupiah) || isNaN(gramCustom)) {
+                tampilkanToast('Mohon isi data dengan benar.', 'error');
+                return;
+            }
+
+            let formattedDate = '-';
+            if (tanggalInput) {
+                const dt = new Date(tanggalInput);
+                const dd = String(dt.getDate()).padStart(2, '0');
+                const mm = String(dt.getMonth() + 1).padStart(2, '0');
+                const yyyy = dt.getFullYear();
+                const hh = String(dt.getHours()).padStart(2, '0');
+                const min = String(dt.getMinutes()).padStart(2, '0');
+                const ss = String(dt.getSeconds()).padStart(2, '0');
+                formattedDate = dd + '/' + mm + '/' + yyyy + ' ' + hh + ':' + min + ':' + ss;
+            }
+
+            const payload = { nama: nama, jenis: jenis, tanggal: formattedDate, rupiah: rupiah, gram: gramCustom, keterangan: keterangan };
+
+            fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'tambahTransaksi', payload: payload })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    tampilkanToast(res.message);
+                    tutupModalTransaksi();
+                    document.getElementById('formNama').value = '';
+                    document.getElementById('formRupiah').value = '';
+                    document.getElementById('formGram').value = '';
+                    document.getElementById('formKeterangan').value = '';
+                    muatDataDashboard();
+                    muatTabelTransaksi();
+                } else {
+                    tampilkanToast(res.message, 'error');
+                }
+            })
+            .catch(err => tampilkanToast('Kesalahan koneksi: ' + err.message, 'error'));
+        }
+
+        function bukaModalHarga() {
+            document.getElementById('modalHarga').classList.remove('hidden');
+            setWaktuDefault();
+        }
+        function tutupModalHarga() { document.getElementById('modalHarga').classList.add('hidden'); }
+
+        function simpanHargaBaru(event) {
+            event.preventDefault();
+            const tanggalInput = document.getElementById('formHargaTanggal').value;
+            const hargaBaru = parseFloat(document.getElementById('formHargaBaru').value);
+            
+            if (isNaN(hargaBaru) || hargaBaru <= 0) {
+                tampilkanToast('Harga tidak valid.', 'error');
+                return;
+            }
+
+            let formattedDate = '-';
+            if (tanggalInput) {
+                const dt = new Date(tanggalInput);
+                const dd = String(dt.getDate()).padStart(2, '0');
+                const mm = String(dt.getMonth() + 1).padStart(2, '0');
+                const yyyy = dt.getFullYear();
+                const hh = String(dt.getHours()).padStart(2, '0');
+                const min = String(dt.getMinutes()).padStart(2, '0');
+                const ss = String(dt.getSeconds()).padStart(2, '0');
+                formattedDate = dd + '/' + mm + '/' + yyyy + ' ' + hh + ':' + min + ':' + ss;
+            }
+
+            const payload = { tanggal: formattedDate, harga: hargaBaru };
+
+            fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'updateHarga', payload: payload })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    tampilkanToast(res.message);
+                    tutupModalHarga();
+                    document.getElementById('formHargaBaru').value = '';
+                    muatDataDashboard();
+                } else {
+                    tampilkanToast(res.message, 'error');
+                }
+            })
+            .catch(err => tampilkanToast('Kesalahan koneksi: ' + err.message, 'error'));
+        }
+
+        function bukaModalRiwayatHarga() {
+            document.getElementById('modalRiwayatHarga').classList.remove('hidden');
+            fetch(`${API_URL}?action=getRiwayatHarga`)
+                .then(res => res.json())
+                .then(res => {
+                    const tbody = document.getElementById('tabelRiwayatHargaBody');
+                    tbody.innerHTML = '';
+                    if (!res.data || res.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-slate-400">Belum ada riwayat.</td></tr>';
+                        return;
+                    }
+                    let html = '';
+                    res.data.forEach(function(row) {
+                        const statusBadge = row[2] === 'AKTIF' ? 
+                            '<span class="px-2 py-0.5 rounded text-[10px] sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">AKTIF</span>' : 
+                            '<span class="px-2 py-0.5 rounded text-[10px] sm:text-xs font-semibold bg-slate-100 text-slate-500">ARSIP</span>';
+                        html += '<tr class="hover:bg-slate-50 transition">' +
+                            '<td class="px-3 sm:px-4 py-3 text-slate-600 text-xs">' + row[0] + '</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-amber-700 text-xs sm:text-sm">Rp ' + Number(row[1]).toLocaleString('id-ID') + '</td>' +
+                            '<td class="px-3 sm:px-4 py-3">' + statusBadge + '</td>' +
+                            '</tr>';
+                    });
+                    tbody.innerHTML = html;
+                })
+                .catch(err => tampilkanToast('Gagal memuat riwayat harga: ' + err.message, 'error'));
+        }
+        function tutupModalRiwayatHarga() { document.getElementById('modalRiwayatHarga').classList.add('hidden'); }
+    </script>
+</body>
+</html>
