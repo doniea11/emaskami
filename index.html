@@ -243,6 +243,10 @@
                     </tfoot>
                 </table>
             </div>
+            <!-- Bagian Profit / Loss di bawah tengah modal rekap -->
+            <div id="containerProfitLoss" class="mt-4 pt-3 border-t border-slate-200 text-center text-xs sm:text-sm font-bold italic">
+                <!-- Profit/Loss dinamis -->
+            </div>
             <div class="flex justify-end mt-4">
                 <button onclick="tutupModalRekap()" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-200 transition">Tutup</button>
             </div>
@@ -561,8 +565,10 @@
                 .then(res => {
                     const tbody = document.getElementById('tabelRekapBody');
                     const tfoot = document.getElementById('tabelRekapFoot');
+                    const profitLossContainer = document.getElementById('containerProfitLoss');
                     tbody.innerHTML = '';
                     tfoot.innerHTML = '';
+                    profitLossContainer.innerHTML = '';
 
                     if (!res.data || res.data.length === 0) {
                         tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">Belum ada data nasabah.</td></tr>';
@@ -589,7 +595,7 @@
                     });
                     tbody.innerHTML = html;
 
-                    // Render baris total di bagian bawah tabel rekap dengan font italic
+                    // Baris Total di tabel (italic)
                     tfoot.innerHTML = '<tr class="italic text-xs sm:text-sm bg-slate-100">' +
                         '<td class="px-3 sm:px-4 py-3 font-bold text-slate-900">TOTAL</td>' +
                         '<td class="px-3 sm:px-4 py-3 text-center">-</td>' +
@@ -597,6 +603,15 @@
                         '<td class="px-3 sm:px-4 py-3 text-right font-bold text-slate-900">Rp ' + totalTabunganRp.toLocaleString('id-ID') + '</td>' +
                         '<td class="px-3 sm:px-4 py-3 text-right font-bold text-amber-800">Rp ' + totalValuasiRp.toLocaleString('id-ID') + '</td>' +
                         '</tr>';
+
+                    // Hitung Profit / Loss (Valuasi Sekarang - Total Tabungan)
+                    const profitLossVal = totalValuasiRp - totalTabunganRp;
+                    const isProfit = profitLossVal >= 0;
+                    const colorClass = isProfit ? 'text-emerald-600' : 'text-rose-600';
+                    const signStr = isProfit ? '+ Rp ' : '- Rp ';
+                    const formattedPL = signStr + Math.abs(profitLossVal).toLocaleString('id-ID');
+
+                    profitLossContainer.innerHTML = `<span class="text-slate-600 italic">Profit / Loss: </span><span class="${colorClass} italic font-bold">${formattedPL}</span>`;
                 })
                 .catch(err => tampilkanToast('Gagal memuat rekap: ' + err.message, 'error'));
         }
