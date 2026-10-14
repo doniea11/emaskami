@@ -371,7 +371,7 @@
 
     <!-- SCRIPT CLIENT FETCH API (VERCEL COMPATIBLE) -->
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwJN9SnRE4o5bFFqYr6hF-2qogPitj80aAWrD6aaEmloxrTF4PpRoX8Ip0Do2rcz7Vk/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbx14EhSCffJxExVpCMmKEJPrXT8Tcm1QrFB2laCKRiMzFfmvpth_9z521eRXp7exgN_/exec";
 
         let halamanAktif = 1;
         let limitData = 10;
@@ -447,7 +447,8 @@
                             '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Setor</span>' : 
                             '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Ambil</span>';
                         
-                        const gramVal = parseFloat(String(row[5]).replace(',', '.')) || 0;
+                        let cleanGramStr = String(row[5]).trim().replace(" gr", "").replace("Rp ", "").replace(/\./g, "").replace(",", ".");
+                        const gramVal = parseFloat(cleanGramStr) || 0;
 
                         html += '<tr class="hover:bg-slate-50 transition">' +
                             '<td class="px-3 sm:px-4 py-3 font-mono text-[11px] sm:text-xs text-bsi font-semibold">' + row[0] + '</td>' +
