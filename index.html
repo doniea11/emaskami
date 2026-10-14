@@ -120,36 +120,24 @@
         </div>
 
         <!-- Dashboard & Chart Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-            <div class="glass-card rounded-2xl p-4 sm:p-6 lg:col-span-2 flex flex-col justify-between">
+        <div class="w-full">
+            <div class="glass-card rounded-2xl p-4 sm:p-6 flex flex-col justify-between">
                 <div class="flex justify-between items-center mb-3 sm:mb-4">
                     <h2 class="text-sm sm:text-lg font-bold text-slate-800 flex items-center space-x-2">
                         <i class="fa-solid fa-chart-pie text-bsi"></i>
                         <span>Portofolio Kepemilikan Emas Nasabah</span>
                     </h2>
-                    <span class="text-[11px] sm:text-xs text-slate-500 font-medium">Distribusi Gram</span>
-                </div>
-                <div class="h-56 sm:h-64 relative flex items-center justify-center">
-                    <canvas id="chartNasabah"></canvas>
-                </div>
-            </div>
-            <div class="glass-card rounded-2xl p-4 sm:p-6 flex flex-col justify-between">
-                <div>
-                    <h2 class="text-sm sm:text-lg font-bold text-slate-800 flex items-center space-x-2 mb-4">
-                        <i class="fa-solid fa-shield-halal text-bsi"></i>
-                        <span>Informasi Tabungan Emas</span>
-                    </h2>
-                    <div class="space-y-2.5 bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200">
-                        <div class="flex justify-between text-xs">
-                            <span class="text-slate-500">Metode Konversi:</span>
-                            <span class="font-semibold text-bsi">Presisi Fleksibel</span>
-                        </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="bukaModalRiwayatHarga()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-xl font-semibold transition border border-slate-300 flex items-center space-x-1.5">
+                            <i class="fa-solid fa-clock-rotate-left text-bsi"></i>
+                            <span>Riwayat Harga</span>
+                        </button>
+                        <span class="text-[11px] sm:text-xs text-bsi italic font-semibold hidden sm:inline">Persentase</span>
                     </div>
                 </div>
-                <button onclick="bukaModalRiwayatHarga()" class="w-full mt-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs py-2.5 rounded-xl font-semibold transition border border-slate-300 flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-clock-rotate-left text-bsi"></i>
-                    <span>Lihat Riwayat Harga Emas</span>
-                </button>
+                <div class="h-64 sm:h-80 relative flex items-center justify-center">
+                    <canvas id="chartNasabah"></canvas>
+                </div>
             </div>
         </div>
 
@@ -371,7 +359,7 @@
 
     <!-- SCRIPT CLIENT FETCH API (VERCEL COMPATIBLE) -->
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycby9s2A7bIwgMyM4QB3FMY7GP0CFDOJRocXmOGCozMRRdOOJX4OADJSljIJvLx6DPfad/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzoiYLy9AXgU54U2YtHUoWKbd0pIcS5jqSu98h0t5BR3WyKhk9R_SpU4nAHfCoTzqRs/exec";
 
         let halamanAktif = 1;
         let limitData = 10;
@@ -418,14 +406,8 @@
                         document.getElementById('statTotalValuasi').innerText = 'Rp ' + Number(res.totalValuasi).toLocaleString('id-ID');
                         document.getElementById('labelHargaAktif').innerHTML = '<i class="fa-solid fa-tag mr-1"></i> Harga: Rp ' + Number(res.hargaAktif).toLocaleString('id-ID') + '/gr';
                         
-                        // Format tanggal update dari backend ke format dd-mm-yyyy jika ada
                         let tglUpdateStr = res.tanggalUpdate || "-";
-                        if (tglUpdateStr !== "-") {
-                            // Jika format tersimpan dd-mm-yyyy atau yyyy-mm-dd
-                            document.getElementById('labelTanggalHarga').innerText = 'update tanggal ' + tglUpdateStr;
-                        } else {
-                            document.getElementById('labelTanggalHarga').innerText = 'update tanggal -';
-                        }
+                        document.getElementById('labelTanggalHarga').innerText = 'update tanggal ' + tglUpdateStr;
 
                         renderPieChart(res.ringkasanNasabah);
                     }
@@ -488,6 +470,40 @@
             muatTabelTransaksi();
         }
 
+        const centerPercentagePlugin = {
+            id: 'centerPercentagePlugin',
+            afterDraw(chart) {
+                const { ctx, width, height } = chart;
+                ctx.save();
+                const activeMeta = chart.getDatasetMeta(0);
+                if (!activeMeta || !activeMeta.data || activeMeta.data.length === 0) return;
+                
+                const xCenter = activeMeta.data[0].x;
+                const yCenter = activeMeta.data[0].y;
+                
+                const activeElements = chart.getActiveElements();
+                if (activeElements.length > 0) {
+                    const dataIndex = activeElements[0].index;
+                    const dataset = chart.data.datasets[0];
+                    const total = dataset.data.reduce((acc, val) => acc + val, 0);
+                    const currentValue = dataset.data[dataIndex];
+                    const percentage = total > 0 ? ((currentValue / total) * 100).toFixed(1) + '%' : '0%';
+                    const labelName = chart.data.labels[dataIndex];
+
+                    ctx.font = 'bold 13px Inter, sans-serif';
+                    ctx.fillStyle = '#1e293b';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(percentage, xCenter, yCenter - 6);
+
+                    ctx.font = '10px Inter, sans-serif';
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillText(labelName, xCenter, yCenter + 10);
+                }
+                ctx.restore();
+            }
+        };
+
         function renderPieChart(dataNasabah) {
             const ctx = document.getElementById('chartNasabah').getContext('2d');
             const labels = Object.keys(dataNasabah);
@@ -499,11 +515,11 @@
 
             if (labels.length === 0) return;
 
-            const dynamicColors = [
-                '#00a3ad', '#b89728', '#20b2aa', '#3cb371', '#e67e22', 
-                '#9b59b6', '#3498db', '#e74c3c', '#1abc9c', '#f1c40f'
+            const distinctColors = [
+                '#00a3ad', '#e74c3c', '#f1c40f', '#9b59b6', '#2ecc71', 
+                '#e67e22', '#3498db', '#1abc9c', '#d35400', '#34495e'
             ];
-            let backgroundColors = labels.map((_, i) => dynamicColors[i % dynamicColors.length]);
+            let backgroundColors = labels.map((_, i) => distinctColors[i % distinctColors.length]);
 
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
@@ -527,9 +543,20 @@
                                 font: { size: 10, family: 'Inter' },
                                 boxWidth: 12
                             }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const val = context.raw;
+                                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                    return ` ${context.label}: ${val} gr (${pct}%)`;
+                                }
+                            }
                         }
                     }
-                }
+                },
+                plugins: [centerPercentagePlugin]
             });
         }
 
