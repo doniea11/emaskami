@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Gold</title>
+    <title>Catatan Tabungan Emas</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN -->
@@ -184,13 +184,12 @@
                             <th class="px-3 sm:px-4 py-3">Jenis</th>
                             <th class="px-3 sm:px-4 py-3 text-right">Jumlah Rupiah</th>
                             <th class="px-3 sm:px-4 py-3 text-right">Jumlah Gram</th>
-                            <th class="px-3 sm:px-4 py-3 text-right">Harga / Gram</th>
                             <th class="px-3 sm:px-4 py-3">Keterangan</th>
                         </tr>
                     </thead>
                     <tbody id="tabelTransaksiBody" class="divide-y divide-slate-100 bg-white">
                         <tr>
-                            <td colspan="8" class="text-center py-6 text-slate-400">Memuat data transaksi...</td>
+                            <td colspan="7" class="text-center py-6 text-slate-400">Memuat data transaksi...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -372,7 +371,7 @@
 
     <!-- SCRIPT CLIENT FETCH API (VERCEL COMPATIBLE) -->
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbyNxiRlkog8Jw3xFMCGkOVLYD8Y8JdJVaefeZo4nrxUHdb-7fD8b0ZcbpotlexIioKG/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwJN9SnRE4o5bFFqYr6hF-2qogPitj80aAWrD6aaEmloxrTF4PpRoX8Ip0Do2rcz7Vk/exec";
 
         let halamanAktif = 1;
         let limitData = 10;
@@ -389,7 +388,7 @@
             const now = new Date();
             const offset = now.getTimezoneOffset();
             const localDate = new Date(now.getTime() - (offset*60*1000));
-            const isoStr = localDate.toISOString().slice(0,10); // Format YYYY-MM-DD
+            const isoStr = localDate.toISOString().slice(0,10);
             document.getElementById('formTanggal').value = isoStr;
             document.getElementById('formHargaTanggal').value = isoStr;
         }
@@ -435,7 +434,7 @@
                     const tbody = document.getElementById('tabelTransaksiBody');
                     tbody.innerHTML = '';
                     if (!res.data || res.data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400">Belum ada data transaksi.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400">Belum ada data transaksi.</td></tr>';
                         document.getElementById('infoPagination').innerText = 'Menampilkan 0 data';
                         document.getElementById('btnPrev').disabled = true;
                         document.getElementById('btnNext').disabled = true;
@@ -448,14 +447,15 @@
                             '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Setor</span>' : 
                             '<span class="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Ambil</span>';
                         
+                        const gramVal = parseFloat(String(row[5]).replace(',', '.')) || 0;
+
                         html += '<tr class="hover:bg-slate-50 transition">' +
                             '<td class="px-3 sm:px-4 py-3 font-mono text-[11px] sm:text-xs text-bsi font-semibold">' + row[0] + '</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-slate-500 text-xs">' + row[1] + '</td>' +
                             '<td class="px-3 sm:px-4 py-3 font-semibold text-slate-800 text-xs sm:text-sm">' + row[2] + '</td>' +
                             '<td class="px-3 sm:px-4 py-3">' + jenisBadge + '</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-slate-800 text-xs sm:text-sm">Rp ' + Number(row[4]).toLocaleString('id-ID') + '</td>' +
-                            '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-emerald-600 text-xs sm:text-sm">' + Number(row[5]) + ' gr</td>' +
-                            '<td class="px-3 sm:px-4 py-3 text-right text-slate-500 text-xs">Rp ' + Number(row[6]).toLocaleString('id-ID') + '</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-emerald-600 text-xs sm:text-sm">' + gramVal + ' gr</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-slate-500 text-[11px] sm:text-xs">' + (row[7] || '-') + '</td>' +
                             '</tr>';
                     });
@@ -586,7 +586,7 @@
             event.preventDefault();
             const nama = document.getElementById('formNama').value.trim();
             const jenis = document.getElementById('formJenis').value;
-            const tanggalInput = document.getElementById('formTanggal').value; // Format YYYY-MM-DD
+            const tanggalInput = document.getElementById('formTanggal').value;
             const rupiah = parseFloat(document.getElementById('formRupiah').value);
             const gramCustom = parseFloat(document.getElementById('formGram').value);
             const keterangan = document.getElementById('formKeterangan').value.trim();
@@ -598,9 +598,9 @@
 
             let formattedDate = '-';
             if (tanggalInput) {
-                const parts = tanggalInput.split("-"); // [YYYY, MM, DD]
+                const parts = tanggalInput.split("-");
                 if (parts.length === 3) {
-                    formattedDate = parts[2] + '-' + parts[1] + '-' + parts[0]; // dd-mm-yyyy
+                    formattedDate = parts[2] + '-' + parts[1] + '-' + parts[0];
                 }
             }
 
@@ -648,7 +648,7 @@
             if (tanggalInput) {
                 const parts = tanggalInput.split("-");
                 if (parts.length === 3) {
-                    formattedDate = parts[2] + '-' + parts[1] + '-' + parts[0]; // dd-mm-yyyy
+                    formattedDate = parts[2] + '-' + parts[1] + '-' + parts[0];
                 }
             }
 
