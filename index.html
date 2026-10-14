@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Catatan Tabungan Emas</title>
+    <title>My Gold</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js CDN -->
@@ -143,7 +143,7 @@
                         </div>
                         <div class="flex justify-between text-xs">
                             <span class="text-slate-500">Metode Konversi:</span>
-                            <span class="font-semibold text-bsi">Presisi 4 Desimal</span>
+                            <span class="font-semibold text-bsi">Presisi Fleksibel</span>
                         </div>
                     </div>
                 </div>
@@ -291,16 +291,16 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Transaksi</label>
-                        <input type="datetime-local" id="formTanggal" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                        <input type="date" id="formTanggal" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Nominal Rupiah (Rp)</label>
-                    <input type="number" id="formRupiah" required min="1000" oninput="hitungGramOtomatis()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                    <input type="number" id="formRupiah" required min="1000" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Gram (gr)</label>
-                    <input type="number" id="formGram" step="0.0001" required min="0.0001" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                    <input type="number" id="formGram" step="any" required min="0.0001" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Keterangan / Catatan</label>
@@ -327,7 +327,7 @@
             <form onsubmit="simpanHargaBaru(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Pembaruan</label>
-                    <input type="datetime-local" id="formHargaTanggal" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                    <input type="date" id="formHargaTanggal" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Harga Jual per Gram (Rp)</label>
@@ -372,8 +372,7 @@
 
     <!-- SCRIPT CLIENT FETCH API (VERCEL COMPATIBLE) -->
     <script>
-        // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
-        const API_URL = "https://script.google.com/macros/s/AKfycbwmOnR1ySptMnwDtfNT4TrqK0izhEd48UJUx5FpkCoEuQyR_YVt0rm4yIaECnb-WtdJ/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbyNxiRlkog8Jw3xFMCGkOVLYD8Y8JdJVaefeZo4nrxUHdb-7fD8b0ZcbpotlexIioKG/exec";
 
         let halamanAktif = 1;
         let limitData = 10;
@@ -390,17 +389,9 @@
             const now = new Date();
             const offset = now.getTimezoneOffset();
             const localDate = new Date(now.getTime() - (offset*60*1000));
-            const isoStr = localDate.toISOString().slice(0,16);
+            const isoStr = localDate.toISOString().slice(0,10); // Format YYYY-MM-DD
             document.getElementById('formTanggal').value = isoStr;
             document.getElementById('formHargaTanggal').value = isoStr;
-        }
-
-        function hitungGramOtomatis() {
-            const rupiah = parseFloat(document.getElementById('formRupiah').value) || 0;
-            if (hargaAktifGlobal > 0) {
-                const gram = rupiah / hargaAktifGlobal;
-                document.getElementById('formGram').value = gram.toFixed(4);
-            }
         }
 
         function tampilkanToast(pesan, tipe = 'success') {
@@ -463,7 +454,7 @@
                             '<td class="px-3 sm:px-4 py-3 font-semibold text-slate-800 text-xs sm:text-sm">' + row[2] + '</td>' +
                             '<td class="px-3 sm:px-4 py-3">' + jenisBadge + '</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-slate-800 text-xs sm:text-sm">Rp ' + Number(row[4]).toLocaleString('id-ID') + '</td>' +
-                            '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-emerald-600 text-xs sm:text-sm">' + Number(row[5]).toFixed(4) + ' gr</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-emerald-600 text-xs sm:text-sm">' + Number(row[5]) + ' gr</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-right text-slate-500 text-xs">Rp ' + Number(row[6]).toLocaleString('id-ID') + '</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-slate-500 text-[11px] sm:text-xs">' + (row[7] || '-') + '</td>' +
                             '</tr>';
@@ -548,7 +539,7 @@
                         html += '<tr class="hover:bg-slate-50 transition">' +
                             '<td class="px-3 sm:px-4 py-3 font-semibold text-slate-800 text-xs sm:text-sm">' + row.nama + '</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-center text-slate-600 text-xs">' + row.jumlahTransaksi + 'x</td>' +
-                            '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-emerald-600 text-xs sm:text-sm">' + row.saldoGram.toFixed(4) + ' gr</td>' +
+                            '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-emerald-600 text-xs sm:text-sm">' + row.saldoGram + ' gr</td>' +
                             '<td class="px-3 sm:px-4 py-3 text-right font-semibold text-amber-700 text-xs sm:text-sm">Rp ' + Number(row.valuasiAset).toLocaleString('id-ID') + '</td>' +
                             '</tr>';
                     });
@@ -595,7 +586,7 @@
             event.preventDefault();
             const nama = document.getElementById('formNama').value.trim();
             const jenis = document.getElementById('formJenis').value;
-            const tanggalInput = document.getElementById('formTanggal').value;
+            const tanggalInput = document.getElementById('formTanggal').value; // Format YYYY-MM-DD
             const rupiah = parseFloat(document.getElementById('formRupiah').value);
             const gramCustom = parseFloat(document.getElementById('formGram').value);
             const keterangan = document.getElementById('formKeterangan').value.trim();
@@ -607,14 +598,10 @@
 
             let formattedDate = '-';
             if (tanggalInput) {
-                const dt = new Date(tanggalInput);
-                const dd = String(dt.getDate()).padStart(2, '0');
-                const mm = String(dt.getMonth() + 1).padStart(2, '0');
-                const yyyy = dt.getFullYear();
-                const hh = String(dt.getHours()).padStart(2, '0');
-                const min = String(dt.getMinutes()).padStart(2, '0');
-                const ss = String(dt.getSeconds()).padStart(2, '0');
-                formattedDate = dd + '/' + mm + '/' + yyyy + ' ' + hh + ':' + min + ':' + ss;
+                const parts = tanggalInput.split("-"); // [YYYY, MM, DD]
+                if (parts.length === 3) {
+                    formattedDate = parts[2] + '-' + parts[1] + '-' + parts[0]; // dd-mm-yyyy
+                }
             }
 
             const payload = { nama: nama, jenis: jenis, tanggal: formattedDate, rupiah: rupiah, gram: gramCustom, keterangan: keterangan };
@@ -659,14 +646,10 @@
 
             let formattedDate = '-';
             if (tanggalInput) {
-                const dt = new Date(tanggalInput);
-                const dd = String(dt.getDate()).padStart(2, '0');
-                const mm = String(dt.getMonth() + 1).padStart(2, '0');
-                const yyyy = dt.getFullYear();
-                const hh = String(dt.getHours()).padStart(2, '0');
-                const min = String(dt.getMinutes()).padStart(2, '0');
-                const ss = String(dt.getSeconds()).padStart(2, '0');
-                formattedDate = dd + '/' + mm + '/' + yyyy + ' ' + hh + ':' + min + ':' + ss;
+                const parts = tanggalInput.split("-");
+                if (parts.length === 3) {
+                    formattedDate = parts[2] + '-' + parts[1] + '-' + parts[0]; // dd-mm-yyyy
+                }
             }
 
             const payload = { tanggal: formattedDate, harga: hargaBaru };
