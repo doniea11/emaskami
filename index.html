@@ -264,14 +264,17 @@
                 <button onclick="tutupModalTransaksi()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <form onsubmit="simpanTransaksi(event)" class="space-y-3 sm:space-y-4">
-                <div>
+                <div class="relative">
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Nasabah</label>
-                    <input type="text" id="formNama" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                    <!-- Ditambahkan oninput untuk memaksakan uppercase dan memanggil fitur autocomplete -->
+                    <input type="text" id="formNama" oninput="this.value = this.value.toUpperCase(); filterNasabah()" autocomplete="off" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi uppercase">
+                    <!-- Wadah untuk memunculkan dropdown autocomplete -->
+                    <ul id="listNasabah" class="absolute z-10 w-full bg-white border border-slate-200 rounded-xl mt-1 shadow-lg max-h-40 overflow-y-auto hidden"></ul>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Jenis Transaksi</label>
-                        <select id="formJenis" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                        <select id="formJenis" onchange="handleJenisTransaksiChange()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
                             <option value="Setor Uang">Setor Uang</option>
                             <option value="Ambil Uang">Ambil Uang</option>
                         </select>
@@ -283,12 +286,12 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Nominal Rupiah (Rp)</label>
-                    <!-- Ditambahkan oninput="hitungOtomatisGram()" -->
-                    <input type="number" id="formRupiah" oninput="hitungOtomatisGram()" required min="1000" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                    <!-- Ditambahkan oninput="formatRupiah(this); hitungOtomatisGram()" dan diubah menjadi type="text" -->
+                    <input type="text" id="formRupiah" oninput="formatRupiah(this); hitungOtomatisGram()" inputmode="numeric" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Gram (gr)</label>
-                    <input type="text" id="formGram" inputmode="decimal" required placeholder="Contoh: 0.039" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi">
+                    <input type="text" id="formGram" inputmode="decimal" required placeholder="Contoh: 0.039" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-bsi transition-colors">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Keterangan / Catatan</label>
@@ -360,12 +363,13 @@
 
     <!-- SCRIPT CLIENT FETCH API (VERCEL COMPATIBLE) -->
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxKbqjZEabocSEpGE9S6s_QX7fZsEpC0gMJDkxKDbHtBJX69QwSghI2kRsiDyMS90nr/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwSJqAoaVZj3j25TG0MPjYN9oLjYf2mrUcYBcgL5eW8jCbrrlgcQSIeDSnIPZPyK87i/exec";
 
         let halamanAktif = 1;
         let limitData = 10;
         let chartInstance = null;
         let hargaAktifGlobal = 1250000;
+        let daftarNasabahGlobal = []; // State untuk menampung nama nasabah (Autocomplete)
 
         document.addEventListener('DOMContentLoaded', function() {
             muatDataDashboard();
@@ -382,9 +386,42 @@
             document.getElementById('formHargaTanggal').value = isoStr;
         }
 
+        // --- Fungsi Handle Perubahan Jenis Transaksi ---
+        function handleJenisTransaksiChange() {
+            const jenis = document.getElementById('formJenis').value;
+            const inputGram = document.getElementById('formGram');
+            const nominalRupiah = document.getElementById('formRupiah').value;
+            
+            if (jenis === 'Setor Uang') {
+                // Buka kunci input gram agar bisa diisi manual
+                inputGram.readOnly = false;
+                inputGram.classList.remove('bg-slate-200');
+                inputGram.classList.add('bg-slate-50');
+            } else if (jenis === 'Ambil Uang') {
+                // Kunci input gram (readonly) dan beri visual background abu-abu
+                inputGram.readOnly = true;
+                inputGram.classList.remove('bg-slate-50');
+                inputGram.classList.add('bg-slate-200');
+                
+                // Picu hitung otomatis jika sudah ada nilai nominal yang terisi
+                if (nominalRupiah) {
+                    hitungOtomatisGram();
+                }
+            }
+        }
+
         // --- Fungsi Kalkulasi Otomatis Gram ---
         function hitungOtomatisGram() {
-            const nominalRupiah = parseFloat(document.getElementById('formRupiah').value);
+            const jenisTransaksi = document.getElementById('formJenis').value;
+            
+            // Jika Setor Uang, fungsi berhenti (membiarkan user isi manual)
+            if (jenisTransaksi === 'Setor Uang') {
+                return;
+            }
+
+            // Bersihkan titik ribuan sebelum kalkulasi
+            const nominalStr = document.getElementById('formRupiah').value.replace(/\./g, '');
+            const nominalRupiah = parseFloat(nominalStr);
             const inputGram = document.getElementById('formGram');
             
             // Cek jika input Rupiah tidak valid atau kosong
@@ -393,12 +430,28 @@
                 return;
             }
             
-            // Hitung gram jika data harga emas aktif tersedia
+            // Hitung gram otomatis untuk Ambil Uang
             if (hargaAktifGlobal > 0) {
                 const hasil = nominalRupiah / hargaAktifGlobal;
-                // parseFloat akan menghapus angka 0 berlebih di belakang koma, toFixed(4) membatasi max 4 desimal
                 inputGram.value = parseFloat(hasil.toFixed(4));
             }
+        }
+
+        // --- Fungsi Format Otomatis Titik Ribuan (Rupiah) ---
+        function formatRupiah(angka) {
+            let value = angka.value.replace(/[^,\d]/g, '').toString();
+            let split = value.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            angka.value = rupiah;
         }
 
         function tampilkanToast(pesan, tipe = 'success') {
@@ -431,8 +484,15 @@
 
                         renderPieChart(res.ringkasanNasabah);
                         
-                        // Picu ulang kalkulasi otomatis jika ada nilai terisi (mengatasi update data background)
-                        hitungOtomatisGram();
+                        // Ekstrak daftar nama nasabah untuk keperluan Autocomplete
+                        if (res.ringkasanNasabah) {
+                            daftarNasabahGlobal = Object.keys(res.ringkasanNasabah);
+                        }
+                        
+                        // Picu ulang kalkulasi otomatis setelah load data jika jenis transaksi adalah Ambil Uang
+                        if(document.getElementById('formJenis').value === 'Ambil Uang') {
+                            hitungOtomatisGram();
+                        }
                     }
                 })
                 .catch(err => tampilkanToast('Gagal memuat ringkasan: ' + err.message, 'error'));
@@ -581,6 +641,49 @@
             });
         }
 
+        // --- Fitur Autocomplete Nama Nasabah ---
+        function filterNasabah() {
+            const input = document.getElementById('formNama');
+            const list = document.getElementById('listNasabah');
+            const val = input.value.trim();
+            
+            list.innerHTML = '';
+            
+            if (!val) {
+                list.classList.add('hidden');
+                return;
+            }
+            
+            const filtered = daftarNasabahGlobal.filter(nama => nama.includes(val));
+            
+            if (filtered.length === 0) {
+                list.classList.add('hidden');
+                return;
+            }
+            
+            filtered.forEach(nama => {
+                const li = document.createElement('li');
+                li.className = 'px-4 py-2 text-sm text-slate-700 hover:bg-bsi-light hover:text-bsi cursor-pointer border-b border-slate-100 last:border-0 font-semibold';
+                li.innerText = nama;
+                li.onclick = function() {
+                    input.value = nama;
+                    list.classList.add('hidden');
+                };
+                list.appendChild(li);
+            });
+            
+            list.classList.remove('hidden');
+        }
+
+        // Menyembunyikan dropdown autocomplete jika user klik di luar elemen input
+        document.addEventListener('click', function(e) {
+            if (e.target.id !== 'formNama') {
+                const list = document.getElementById('listNasabah');
+                if (list) list.classList.add('hidden');
+            }
+        });
+        // ----------------------------------------
+
         function bukaModalRekap() {
             document.getElementById('modalRekap').classList.remove('hidden');
             fetch(`${API_URL}?action=getRekap`)
@@ -670,6 +773,19 @@
         function bukaModalTransaksi() {
             document.getElementById('modalTransaksi').classList.remove('hidden');
             setWaktuDefault();
+            
+            // Set Form ke default awal (Setor Uang) agar selalu konsisten tiap kali modal dibuka
+            document.getElementById('formJenis').value = 'Setor Uang';
+            document.getElementById('formNama').value = '';
+            document.getElementById('formRupiah').value = '';
+            document.getElementById('formGram').value = '';
+            document.getElementById('formKeterangan').value = '';
+            
+            // Sembunyikan list autocomplete jika masih terbuka
+            const list = document.getElementById('listNasabah');
+            if (list) list.classList.add('hidden');
+            
+            handleJenisTransaksiChange();
         }
         function tutupModalTransaksi() { document.getElementById('modalTransaksi').classList.add('hidden'); }
 
@@ -678,7 +794,10 @@
             const nama = document.getElementById('formNama').value.trim();
             const jenis = document.getElementById('formJenis').value;
             const tanggalInput = document.getElementById('formTanggal').value;
-            const rupiah = parseFloat(document.getElementById('formRupiah').value);
+            
+            // Hapus format titik sebelum diubah jadi Float agar backend tidak Error (NaN)
+            const rupiahStr = document.getElementById('formRupiah').value.replace(/\./g, '');
+            const rupiah = parseFloat(rupiahStr);
             
             const gramInputEl = document.getElementById('formGram');
             const gramCustomStr = gramInputEl.value.trim();
@@ -701,6 +820,12 @@
 
             const payload = { nama: nama, jenis: jenis, tanggal: formattedDate, rupiah: rupiah, gram: gramCustomStr, keterangan: keterangan };
 
+            // Mengubah tombol menjadi status loading sementara
+            const btnSubmit = document.getElementById('btnSimpanTransaksi');
+            const originalText = btnSubmit.innerHTML;
+            btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            btnSubmit.disabled = true;
+
             fetch(API_URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'tambahTransaksi', payload: payload })
@@ -710,17 +835,18 @@
                 if (res.status === 'success') {
                     tampilkanToast(res.message);
                     tutupModalTransaksi();
-                    document.getElementById('formNama').value = '';
-                    document.getElementById('formRupiah').value = '';
-                    document.getElementById('formGram').value = '';
-                    document.getElementById('formKeterangan').value = '';
                     muatDataDashboard();
                     muatTabelTransaksi();
                 } else {
                     tampilkanToast(res.message, 'error');
                 }
             })
-            .catch(err => tampilkanToast('Kesalahan koneksi: ' + err.message, 'error'));
+            .catch(err => tampilkanToast('Kesalahan koneksi: ' + err.message, 'error'))
+            .finally(() => {
+                // Mengembalikan tombol ke keadaan semula
+                btnSubmit.innerHTML = originalText;
+                btnSubmit.disabled = false;
+            });
         }
 
         function bukaModalHarga() {
